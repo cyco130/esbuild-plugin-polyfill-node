@@ -1,9 +1,14 @@
 import type { Plugin } from "esbuild";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { resolve, dirname } from "path";
 
+const filename =
+	typeof __filename === "undefined"
+		? fileURLToPath(import.meta.url)
+		: __filename;
+const importMetaUrl = import.meta.url ?? pathToFileURL(filename).href;
+
 export function nodePolyfills(): Plugin {
-	const filename = global.__filename ?? fileURLToPath(import.meta.url);
 	const moduleNames = Object.keys(polyfills);
 	const filter = new RegExp(
 		`^(node:)?(${moduleNames.join("|")}|inherits|${[...emptyShims.keys()].join(
@@ -15,16 +20,12 @@ export function nodePolyfills(): Plugin {
 		name: "node-polyfills",
 
 		setup(build) {
-			build.onResolve({ filter }, ({ path, importer }) => {
+			build.onResolve({ filter }, async ({ path, importer }) => {
 				const [, , moduleName] = path.match(filter)!;
 
 				if (polyfills[moduleName]) {
 					return {
-						path: resolve(
-							dirname(filename),
-							"../node_modules",
-							polyfills[moduleName],
-						),
+						path: await resolveImport(polyfills[moduleName]),
 					};
 				} else if (emptyShims.has(moduleName)) {
 					return {
@@ -32,8 +33,7 @@ export function nodePolyfills(): Plugin {
 					};
 				} else if (
 					moduleName === "inherits" &&
-					importer ===
-						resolve(dirname(filename), "../node_modules/util/util.js")
+					importer === (await resolveImport("util/util.js"))
 				) {
 					return {
 						path: resolve(dirname(filename), "../polyfills/inherits.js"),
@@ -95,3 +95,13 @@ const emptyShims = new Set([
 	"fs",
 	"crypto",
 ]);
+
+let importMetaResolve: typeof import("import-meta-resolve").resolve;
+
+async function resolveImport(specifier: string) {
+	if (!importMetaResolve) {
+		importMetaResolve = (await import("import-meta-resolve")).resolve;
+	}
+	const resolved = await importMetaResolve(specifier, importMetaUrl);
+	return fileURLToPath(resolved);
+}
