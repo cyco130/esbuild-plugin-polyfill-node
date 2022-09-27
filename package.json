@@ -50,9 +50,11 @@
 	"license": "MIT",
 	"dependencies": {
 		"assert": "^2.0.0",
+		"browserify-fs": "^1.0.0",
 		"browserify-zlib": "^0.2.0",
 		"buffer-es6": "^4.9.3",
 		"console-browserify": "^1.2.0",
+		"crypto-browserify": "^3.12.0",
 		"domain-browser": "^4.22.0",
 		"events": "^3.3.0",
 		"import-meta-resolve": "^2.1.0",

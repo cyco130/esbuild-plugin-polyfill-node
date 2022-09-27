@@ -18,9 +18,20 @@ build({
 	entryPoints: ["src/index.js"],
 	bundle: true,
 	outfile: "dist/bundle.js",
-	plugins: [nodePolyfills()],
+	plugins: [
+		nodePolyfills({
+			// Options (optional)
+		}),
+	],
 });
 ```
+
+## Options
+
+- `buffer`: Whether to inject the `Buffer` global. Disable it to prevent code like `if (typeof Buffer !== "undefined")` from pulling in the (quite large) `buffer-es6` polyfill. Default: `true`.
+- `process`: Whether to inject the `process` global. Disable it to prevent `process.env.NODE_ENV` from pulling in the `process-es6` polyfill. You can use the `define` option to replace `process.env.NODE_ENV` instead. Default: `true`.
+- `crypto`: Whether to polyfill the `crypto` module. This is disabled by default because the `crypto-browserify` polyfill is quite large and you may want to think again before pulling it in. Using the Web Crypto API is usually a better idea. Default: `false`.
+- `fs`: Whether to polyfill the `fs` module. This is disabled by default because the `broserify-fs` polyfill is quite large and you may want to think again before pulling it in. Default: `false`.
 
 ## Provided polyfills
 
@@ -32,8 +43,10 @@ build({
 - `assert` as implemented in [`assert`](https://www.npmjs.com/package/assert)
 - `buffer` as implemented in [`buffer-es6`](https://www.npmjs.com/package/buffer-es6)
 - `console` as implemented in [`console-browserify`](https://www.npmjs.com/package/console-browserify)
+- `crypto`¹ as implemented in [`crypto-browserify`](https://www.npmjs.com/package/crypto-browserify)
 - `domain` as implemented in [`domain-browser`](https://www.npmjs.com/package/domain-browser)
 - `events` as implemented in [`events`](https://www.npmjs.com/package/events)
+- `fs`¹ as implemented in [`browserify-fs`](https://www.npmjs.com/package/browserify-fs)
 - `http` as implemented in [`stream-http`](https://www.npmjs.com/package/stream-http)
 - `https` as implemented in [`stream-http`](https://www.npmjs.com/package/stream-http)
 - `os` as implemented in [`os`](https://www.npmjs.com/package/os)
@@ -51,13 +64,17 @@ build({
 - `vm` as implemented in [`vm-browserify`](https://www.npmjs.com/package/vm-browserify)
 - `zlib` as implemented in [`browserify-zlib`](https://www.npmjs.com/package/browserify-zlib)
 
+¹ `crypto` and `fs` polyfills have to be explicitly enabled by passing `crypto: true` and `fs: true` to the plugin options. Otherwise, they will be replaced with empty stubs.
+
 ## Shimmed globals
 
 - `global` (aliased to `globalThis`)
-- `process`
-- `Buffer`
+- `process`¹ (imports the `process` module)
+- `Buffer`¹ (imports the `buffer` module)
 - `__dirname` (always `"/"`)
 - `__filename` (always `"/index.js"`)
+
+¹ `process` and `Buffer` shims can be disabled by passing `process: false` and `buffer: false` to the plugin options.
 
 ## Empty polyfills
 
@@ -70,8 +87,8 @@ build({
 - `readline`
 - `repl`
 - `tls`
-- `fs`
-- `crypto`
+
+`crypto` and `fs` will also produce empty stubs unless explicitly enabled by passing `crypto: true` and `fs: true` to the plugin options.
 
 ## Credits
 

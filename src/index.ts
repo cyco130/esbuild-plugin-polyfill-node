@@ -8,7 +8,53 @@ const filename =
 		: __filename;
 const importMetaUrl = import.meta.url ?? pathToFileURL(filename).href;
 
-export function nodePolyfills(): Plugin {
+export interface NodePolyfillsOptions {
+	/**
+	 * Whether to inject the `Buffer` global.
+	 *
+	 * Disable it to prevent code like `if (typeof Buffer !== "undefined")`
+	 * from pulling in the (quite large) `buffer-es6` polyfill.
+	 *
+	 * @default true
+	 */
+	buffer?: boolean;
+
+	/**
+	 * Whether to inject the `process` global.
+	 *
+	 * Disable it to prevent `process.env.NODE_ENV` from pulling in the
+	 * `process-es6` polyfill. You can use the `define` option to replace
+	 * `process.env.NODE_ENV` instead.
+	 *
+	 * @default true
+	 */
+	process?: boolean;
+
+	/**
+	 * Whether to polyfill the `fs` module.
+	 *
+	 * This is disabled by default because the `browserify-fs` polyfill is
+	 * quite large and you may want to think again before pulling it in.
+	 *
+	 * @default false
+	 */
+	fs?: boolean;
+
+	/**
+	 * Whether to polyfill the `crypto` module.
+	 *
+	 * This is disabled by default because the `crypto-browserify` polyfill is
+	 * quite large and you may want to think again before pulling it in. Using
+	 * the Web Crypto API is usually a better idea.
+	 *
+	 * @default false
+	 */
+	crypto?: boolean;
+}
+
+export function nodePolyfills(options: NodePolyfillsOptions = {}): Plugin {
+	const { buffer = true, process = true, fs = false, crypto = false } = options;
+
 	const moduleNames = Object.keys(polyfills);
 	const filter = new RegExp(
 		`^(node:)?(${moduleNames.join("|")}|inherits|${[...emptyShims.keys()].join(
@@ -24,6 +70,15 @@ export function nodePolyfills(): Plugin {
 				const [, , moduleName] = path.match(filter)!;
 
 				if (polyfills[moduleName]) {
+					if (
+						(moduleName === "fs" && !fs) ||
+						(moduleName === "crypto" && !crypto)
+					) {
+						return {
+							path: resolve(dirname(filename), "../polyfills/empty.js"),
+						};
+					}
+
 					return {
 						path: await resolveImport(polyfills[moduleName]),
 					};
@@ -44,11 +99,21 @@ export function nodePolyfills(): Plugin {
 			build.initialOptions.inject = build.initialOptions.inject || [];
 			build.initialOptions.inject.push(
 				resolve(dirname(filename), "../polyfills/global.js"),
-				resolve(dirname(filename), "../polyfills/process.js"),
-				resolve(dirname(filename), "../polyfills/buffer.js"),
 				resolve(dirname(filename), "../polyfills/__dirname.js"),
 				resolve(dirname(filename), "../polyfills/__filename.js"),
 			);
+
+			if (buffer) {
+				build.initialOptions.inject.push(
+					resolve(dirname(filename), "../polyfills/buffer.js"),
+				);
+			}
+
+			if (process) {
+				build.initialOptions.inject.push(
+					resolve(dirname(filename), "../polyfills/process.js"),
+				);
+			}
 		},
 	};
 }
@@ -62,8 +127,10 @@ const polyfills: Record<string, string> = {
 	assert: "assert/build/assert.js",
 	buffer: "buffer-es6/index.js",
 	console: "console-browserify/index.js",
+	crypto: "crypto-browserify/index.js",
 	domain: "domain-browser/source/index.js",
 	events: "events/events.js",
+	fs: "browserify-fs/index.js",
 	http: "stream-http/index.js",
 	https: "stream-http/index.js",
 	os: "os/index.js",
@@ -92,8 +159,6 @@ const emptyShims = new Set([
 	"readline",
 	"repl",
 	"tls",
-	"fs",
-	"crypto",
 ]);
 
 let importMetaResolve: typeof import("import-meta-resolve").resolve;
