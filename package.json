@@ -9,6 +9,7 @@
 			"require": "./dist/index.cjs"
 		}
 	},
+	"sideEffects": false,
 	"types": "./dist/index.d.ts",
 	"scripts": {
 		"prepack": "rimraf dist && pnpm build",
