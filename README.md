@@ -1,6 +1,6 @@
 # esbuild-plugin-polyfill-node
 
-[ESBuild](https://esbuild.github.io/) plugin to polyfill Node.js built-ins geared towards edge environments.
+[ESBuild](https://esbuild.github.io/) plugin to polyfill Node.js built-ins and globals, geared towards edge environments and Deno (including Deno Deploy). It consists of two plugins: `polyfillNode`, which should work for most cases, and `polyfillNodeForDeno` which targets Deno and Deno Deploy specifically.
 
 ## Installation
 
@@ -8,32 +8,33 @@
 npm install esbuild-plugin-polyfill-node
 ```
 
-## Usage
+## `polyfillNode`
+
+### Usage
 
 ```js
 import { build } from "esbuild";
-import { nodePolyfills } from "esbuild-plugin-polyfill-node";
+import { polyfillNode } from "esbuild-plugin-polyfill-node";
 
 build({
 	entryPoints: ["src/index.js"],
 	bundle: true,
 	outfile: "dist/bundle.js",
 	plugins: [
-		nodePolyfills({
+		polyfillNode({
 			// Options (optional)
 		}),
 	],
 });
 ```
 
-## Options
+### Options
 
-- `buffer`: Whether to inject the `Buffer` global. Disable it to prevent code like `if (typeof Buffer !== "undefined")` from pulling in the (quite large) `buffer-es6` polyfill. Default: `true`.
-- `process`: Whether to inject the `process` global. Disable it to prevent `process.env.NODE_ENV` from pulling in the `process-es6` polyfill. You can use the `define` option to replace `process.env.NODE_ENV` instead. Default: `true`.
-- `crypto`: Whether to polyfill the `crypto` module. This is disabled by default because the `crypto-browserify` polyfill is quite large and you may want to think again before pulling it in. Using the Web Crypto API is usually a better idea. Default: `false`.
-- `fs`: Whether to polyfill the `fs` module. This is disabled by default because the `broserify-fs` polyfill is quite large and you may want to think again before pulling it in. Default: `false`.
+- `globals.buffer`: Whether to inject the `Buffer` global. Disable it to prevent code like `if (typeof Buffer !== "undefined")` from pulling in the (quite large) `buffer-es6` polyfill. Default: `true`.
+- `globals.process`: Whether to inject the `process` global. Disable it to prevent `process.env.NODE_ENV` from pulling in the `process-es6` polyfill. You can use the `define` option to replace `process.env.NODE_ENV` instead. Default: `true`.
+- `polyfills`: Polyfills to inject. It's an object where the keys are the names of the polyfills and the values are `false`, `true`, or `"empty"`. `false` disables the polyfill, `true` enables it, and `"empty"` injects an empty polyfill.
 
-## Provided polyfills
+### Implemented polyfills
 
 - `_buffer_list` as implemented in [`readable-stream`](https://www.npmjs.com/package/readable-stream)
 - `_stream_passthrough` as implemented in [`readable-stream`](https://www.npmjs.com/package/readable-stream)
@@ -64,19 +65,11 @@ build({
 - `vm` as implemented in [`vm-browserify`](https://www.npmjs.com/package/vm-browserify)
 - `zlib` as implemented in [`browserify-zlib`](https://www.npmjs.com/package/browserify-zlib)
 
-¹ `crypto` and `fs` polyfills have to be explicitly enabled by passing `crypto: true` and `fs: true` to the plugin options. Otherwise, they will be replaced with empty stubs.
+¹ All except `crypto` and `fs` polyfills are on by default. `crypto` and `fs` have to be explicitly enabled. Otherwise, they will be replaced with empty stubs.
 
-## Shimmed globals
+### Empty stubs
 
-- `global` (aliased to `globalThis`)
-- `process`¹ (imports the `process` module)
-- `Buffer`¹ (imports the `buffer` module)
-- `__dirname` (always `"/"`)
-- `__filename` (always `"/index.js"`)
-
-¹ `process` and `Buffer` shims can be disabled by passing `process: false` and `buffer: false` to the plugin options.
-
-## Empty polyfills
+The followings modules are only provided as empty stubs. It is illegal to pass `true` for them.
 
 - `dns`
 - `dgram`
@@ -88,7 +81,43 @@ build({
 - `repl`
 - `tls`
 
-`crypto` and `fs` will also produce empty stubs unless explicitly enabled by passing `crypto: true` and `fs: true` to the plugin options.
+### Globals
+
+- `global` (aliased to `globalThis`)
+- `process`¹ (imports the `process` module)
+- `Buffer`¹ (imports the `buffer` module)
+- `__dirname` (always `"/"`)
+- `__filename` (always `"/index.js"`)
+
+¹ `process` and `Buffer` shims can be disabled by passing `globals.process: false` and `globals.buffer: false` to the plugin options.
+
+## `polyfillNodeForDeno`
+
+This plugin uses Deno's [`std/node`](https://deno.land/std/node) library to polyfill Node builtins and globals. Optionally, it can use polyfills from NPM instead.
+
+### Usage
+
+```js
+import { build } from "esbuild";
+import { polyfillNodeForDeno } from "esbuild-plugin-polyfill-node";
+
+build({
+	entryPoints: ["src/index.js"],
+	bundle: true,
+	outfile: "dist/bundle.js",
+	plugins: [
+		polyfillNodeForDeno({
+			// Options (optional)
+		}),
+	],
+});
+```
+
+### Options
+
+- `stdVersion`: Version of the Deno standard library to use. Default: `"0.160.0"`.
+- `globals`: Whether to inject global polyfills (`process`, `Buffer`, `setImmediate`, `clearImmediate`, `__dirname`, and `__filename`). Default: `true`.
+- `polyfills`: Polyfills to inject. It's an object where the keys are the names of the polyfills and the values are `false`, `true`, `"npm"` or `"empty"`. `false` disables the polyfill, `true` enables it (default where exists), `"npm"` injects a polyfill from the NPM (default for `"domain"`, `"punycode"`, `"vm"`, and `"zlib"`), and `"empty"` injects an empty polyfill (default for [missing polyfills](#empty-stubs)).
 
 ## Credits
 
