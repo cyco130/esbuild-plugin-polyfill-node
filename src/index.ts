@@ -90,7 +90,7 @@ export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
 			...emptyShims.keys(),
 			...Object.keys(polyfills),
 			"inherits",
-		]).entries(),
+		]),
 	];
 
 	const filter = new RegExp(`^(node:)?(${moduleNames.join("|")})$`);
@@ -213,9 +213,10 @@ export function polyfillNodeForDeno(
 			...emptyShims.keys(),
 			...Object.keys(polyfills),
 			"inherits",
-			"virtual:node-globals-for-deno",
-		]).entries(),
+		]),
 	];
+
+	console.log(moduleNames);
 
 	const filter = new RegExp(`^(node:)?(${moduleNames.join("|")})$`);
 
@@ -223,15 +224,18 @@ export function polyfillNodeForDeno(
 		name: "node-polyfills",
 
 		setup(build) {
+			build.onResolve(
+				{
+					filter: /^virtual:deno-std-node-global$/,
+				},
+				() => ({
+					path: `https://deno.land/std@${stdVersion}/node/global.ts`,
+					external: true,
+				}),
+			);
+
 			build.onResolve({ filter }, async ({ path, importer }) => {
 				const [, , moduleName] = path.match(filter)!;
-
-				if (moduleName === "virtual:node-globals-for-deno") {
-					return {
-						path: resolve(dirname(filename), "../polyfills/global.js"),
-						namespace: "polyfillNodeForDeno",
-					};
-				}
 
 				const polyfill =
 					polyfills[moduleName as keyof typeof polyfills] ?? true;
@@ -251,7 +255,7 @@ export function polyfillNodeForDeno(
 						path: resolve(dirname(filename), "../polyfills/inherits.js"),
 					};
 				} else if (polyfill === true) {
-					if (!denoPolyfills[moduleName as keyof typeof denoPolyfills]) {
+					if (!denoPolyfills.has(moduleName)) {
 						throw new Error("Cannot find the Deno polyfill for " + moduleName);
 					}
 
@@ -276,9 +280,10 @@ export function polyfillNodeForDeno(
 			}));
 
 			if (globals) {
+				build.initialOptions.footer;
 				build.initialOptions.inject = build.initialOptions.inject || [];
 				build.initialOptions.inject.push(
-					"virtual:node-globals-for-deno",
+					resolve(dirname(filename), "../polyfills/global-for-deno.js"),
 					resolve(dirname(filename), "../polyfills/__dirname.js"),
 					resolve(dirname(filename), "../polyfills/__filename.js"),
 				);

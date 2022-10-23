@@ -1,6 +1,6 @@
 {
 	"name": "esbuild-plugin-polyfill-node",
-	"version": "0.0.2",
+	"version": "0.1.0",
 	"description": "ESBuild plugin for polyfilling Node.js builtins",
 	"type": "module",
 	"exports": {
