@@ -216,8 +216,6 @@ export function polyfillNodeForDeno(
 		]),
 	];
 
-	console.log(moduleNames);
-
 	const filter = new RegExp(`^(node:)?(${moduleNames.join("|")})$`);
 
 	return {
