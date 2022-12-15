@@ -14,7 +14,7 @@ specifiers:
   eslint: ^8.24.0
   events: ^3.3.0
   import-meta-resolve: ^2.1.0
-  os: ^0.1.2
+  os-browserify: ^0.3.0
   path: ^0.12.7
   prettier: ^2.7.1
   process-es6: ^0.11.6
@@ -44,7 +44,7 @@ dependencies:
   domain-browser: 4.22.0
   events: 3.3.0
   import-meta-resolve: 2.1.0
-  os: 0.1.2
+  os-browserify: 0.3.0
   path: 0.12.7
   process-es6: 0.11.6
   punycode: 2.1.1
@@ -2362,8 +2362,8 @@ packages:
       word-wrap: 1.2.3
     dev: true
 
-  /os/0.1.2:
-    resolution: {integrity: sha512-ZoXJkvAnljwvc56MbvhtKVWmSkzV712k42Is2mA0+0KTSRakq5XXuXpjZjgAt9ctzl51ojhQWakQQpmOvXWfjQ==}
+  /os-browserify/0.3.0:
+    resolution: {integrity: sha512-gjcpUc3clBf9+210TRaDWbf+rZZZEshZ+DlXMRCeAjp0xhTrnQsKHypIy1J3d5hKdUzj69t708EHtU8P6bUn0A==}
     dev: false
 
   /p-limit/3.1.0:

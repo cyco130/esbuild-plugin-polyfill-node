@@ -305,7 +305,7 @@ const npmPolyfillMap: Record<string, string> = {
 	fs: "browserify-fs/index.js",
 	http: "stream-http/index.js",
 	https: "stream-http/index.js",
-	os: "os/index.js",
+	os: "os-browserify/browser.js",
 	path: "path/path.js",
 	process: "process-es6/browser.js",
 	punycode: "punycode/punycode.es6.js",
