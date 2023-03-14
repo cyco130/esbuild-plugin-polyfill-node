@@ -50,6 +50,7 @@ build({
 - `fs`¹ as implemented in [`browserify-fs`](https://www.npmjs.com/package/browserify-fs)
 - `http` as implemented in [`stream-http`](https://www.npmjs.com/package/stream-http)
 - `https` as implemented in [`stream-http`](https://www.npmjs.com/package/stream-http)
+- `inherits` as implemented in [`inherits`](https://www.npmjs.com/package/inherits)
 - `os` as implemented in [`os`](https://www.npmjs.com/package/os)
 - `path` as implemented in [`path`](https://www.npmjs.com/package/path)
 - `process` as implemented in [`process-es6`](https://www.npmjs.com/package/process-es6)
