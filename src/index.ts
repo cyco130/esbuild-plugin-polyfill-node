@@ -48,6 +48,7 @@ export interface PolyfillNodeOptions {
 		fs?: boolean | "empty";
 		http?: boolean | "empty";
 		https?: boolean | "empty";
+		inherits?: boolean | "empty";
 		os?: boolean | "empty";
 		path?: boolean | "empty";
 		process?: boolean | "empty";
@@ -166,6 +167,7 @@ export interface PolyfillNodeForDenoOptions {
 		"fs/promises"?: boolean | "empty";
 		http?: boolean | "npm" | "empty";
 		https?: boolean | "npm" | "empty";
+		inherits?: boolean | "npm" | "empty";
 		module?: boolean | "empty";
 		net?: boolean | "empty";
 		os?: boolean | "npm" | "empty";
@@ -305,6 +307,7 @@ const npmPolyfillMap: Record<string, string> = {
 	fs: "browserify-fs/index.js",
 	http: "stream-http/index.js",
 	https: "stream-http/index.js",
+	inherits: "inherits/inherits_browser.js",
 	os: "os-browserify/browser.js",
 	path: "path/path.js",
 	process: "process-es6/browser.js",
@@ -346,6 +349,7 @@ const denoPolyfills = new Set([
 	"fs",
 	"fs/promises",
 	"http",
+	"inherits",
 	"module",
 	"net",
 	"os",
