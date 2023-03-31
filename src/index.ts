@@ -1,6 +1,6 @@
 import type { Plugin } from "esbuild";
-import { fileURLToPath, pathToFileURL } from "url";
-import { resolve, dirname } from "path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { resolve, dirname } from "node:path";
 
 const filename =
 	typeof __filename === "undefined"
