@@ -31,44 +31,54 @@ export interface PolyfillNodeOptions {
 		process?: boolean;
 	};
 	polyfills?: {
-		// Internal modules used by implementations
-		_buffer_list?: boolean | "empty";
+		_stream_duplex?: boolean | "empty";
 		_stream_passthrough?: boolean | "empty";
 		_stream_readable?: boolean | "empty";
 		_stream_transform?: boolean | "empty";
 		_stream_writable?: boolean | "empty";
-
-		// Common modules
 		assert?: boolean | "empty";
+		"assert/strict"?: boolean | "empty";
+		async_hooks?: boolean | "empty";
 		buffer?: boolean | "empty";
+		child_process?: boolean | "empty";
+		cluster?: boolean | "empty";
 		console?: boolean | "empty";
+		constants?: boolean | "empty";
 		crypto?: boolean | "empty";
+		dgram?: boolean | "empty";
+		diagnostics_channel?: boolean | "empty";
+		dns?: boolean | "empty";
 		domain?: boolean | "empty";
 		events?: boolean | "empty";
 		fs?: boolean | "empty";
+		"fs/promises"?: boolean | "empty";
 		http?: boolean | "empty";
+		http2?: boolean | "empty";
 		https?: boolean | "empty";
+		module?: boolean | "empty";
+		net?: boolean | "empty";
 		os?: boolean | "empty";
 		path?: boolean | "empty";
+		perf_hooks?: boolean | "empty";
 		process?: boolean | "empty";
 		punycode?: boolean | "empty";
 		querystring?: boolean | "empty";
+		readline?: boolean | "empty";
+		repl?: boolean | "empty";
 		stream?: boolean | "empty";
 		string_decoder?: boolean | "empty";
 		sys?: boolean | "empty";
 		timers?: boolean | "empty";
+		"timers/promises"?: boolean | "empty";
+		tls?: boolean | "empty";
 		tty?: boolean | "empty";
 		url?: boolean | "empty";
 		util?: boolean | "empty";
+		v8?: boolean | "empty";
 		vm?: boolean | "empty";
+		wasi?: boolean | "empty";
+		worker_threads?: boolean | "empty";
 		zlib?: boolean | "empty";
-
-		// Not available but can be replaced by an empty shim
-		dns?: false | "empty";
-		dgram?: false | "empty";
-		cluster?: false | "empty";
-		repl?: false | "empty";
-		tls?: false | "empty";
 	};
 }
 
@@ -84,22 +94,16 @@ export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
 	polyfills.repl = polyfills.repl ?? "empty";
 	polyfills.tls = polyfills.tls ?? "empty";
 
-	const moduleNames = [
-		...new Set([
-			...Object.keys(npmPolyfillMap),
-			...emptyShims.keys(),
-			...Object.keys(polyfills),
-			"inherits",
-		]),
-	];
-
+	const moduleNames = [...jspmPolyiflls];
 	const filter = new RegExp(`^(node:)?(${moduleNames.join("|")})$`);
 
 	return {
 		name: "node-polyfills",
 
-		setup(build) {
-			build.onResolve({ filter }, async ({ path, importer }) => {
+		async setup(build) {
+			const fsResolved = await resolveImport(`@jspm/core/nodelibs/fs`);
+
+			build.onResolve({ filter }, async ({ path }) => {
 				const [, , moduleName] = path.match(filter)!;
 
 				const polyfill =
@@ -108,23 +112,14 @@ export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
 				if (polyfill === false) {
 					return;
 				} else if (polyfill === "empty") {
-					return {
-						path: resolve(dirname(filename), "../polyfills/empty.js"),
-					};
-				} else if (
-					moduleName === "inherits" &&
-					importer === (await resolveImport("util/util.js"))
-				) {
-					return {
-						path: resolve(dirname(filename), "../polyfills/inherits.js"),
-					};
-				} else if (!npmPolyfillMap[moduleName]) {
+					return { path: resolve(dirname(filename), "../polyfills/empty.js") };
+				} else if (!jspmPolyiflls.has(moduleName)) {
 					throw new Error("Cannot find polyfill for " + moduleName);
 				}
 
-				return {
-					path: await resolveImport(npmPolyfillMap[moduleName]),
-				};
+				const resolved = resolve(fsResolved, `../../browser/${moduleName}.js`);
+
+				return { path: resolved };
 			});
 
 			build.initialOptions.inject = build.initialOptions.inject || [];
@@ -153,68 +148,48 @@ export interface PolyfillNodeForDenoOptions {
 	stdVersion?: string;
 	globals?: boolean;
 	polyfills?: {
-		assert?: boolean | "npm" | "empty";
+		assert?: boolean | "empty";
 		"assert/strict"?: boolean | "empty";
-		buffer?: boolean | "npm" | "empty";
+		buffer?: boolean | "empty";
 		child_process?: boolean | "empty";
-		console?: boolean | "npm" | "empty";
+		console?: boolean | "empty";
 		constants?: boolean | "empty";
-		crypto?: boolean | "npm" | "empty";
-		domain?: false | "npm" | "empty";
-		events?: boolean | "npm" | "empty";
-		fs?: boolean | "npm" | "empty";
+		crypto?: boolean | "empty";
+		domain?: false | "empty";
+		events?: boolean | "empty";
+		fs?: boolean | "empty";
 		"fs/promises"?: boolean | "empty";
-		http?: boolean | "npm" | "empty";
-		https?: boolean | "npm" | "empty";
+		http?: boolean | "empty";
+		https?: boolean | "empty";
 		module?: boolean | "empty";
 		net?: boolean | "empty";
-		os?: boolean | "npm" | "empty";
-		path?: boolean | "npm" | "empty";
+		os?: boolean | "empty";
+		path?: boolean | "empty";
 		perf_hooks?: boolean | "empty";
-		process?: boolean | "npm" | "empty";
-		punycode?: false | "npm" | "empty";
-		querystring?: boolean | "npm" | "empty";
+		process?: boolean | "empty";
+		punycode?: false | "empty";
+		querystring?: boolean | "empty";
 		readline?: boolean | "empty";
-		stream?: boolean | "npm" | "empty";
-		string_decoder?: boolean | "npm" | "empty";
-		sys?: boolean | "npm" | "empty";
-		timers?: boolean | "npm" | "empty";
+		stream?: boolean | "empty";
+		string_decoder?: boolean | "empty";
+		sys?: boolean | "empty";
+		timers?: boolean | "empty";
 		"timers/promises"?: boolean | "empty";
-		tty?: boolean | "npm" | "empty";
-		url?: boolean | "npm" | "empty";
-		util?: boolean | "npm" | "empty";
-		vm?: false | "npm" | "empty";
+		tty?: boolean | "empty";
+		url?: boolean | "empty";
+		util?: boolean | "empty";
+		vm?: false | "empty";
 		worker_threads?: boolean | "empty";
-		zlib?: false | "npm" | "empty";
-
-		// Not available but can be replaced by an empty shim
-		dns?: false | "empty";
-		dgram?: false | "empty";
-		cluster?: false | "empty";
-		repl?: false | "empty";
-		tls?: false | "empty";
+		zlib?: false | "empty";
 	};
 }
 
 export function polyfillNodeForDeno(
 	options: PolyfillNodeForDenoOptions = {},
 ): Plugin {
-	const { stdVersion = "0.160.0", globals = true, polyfills = {} } = options;
+	const { stdVersion = "0.177.0", globals = true, polyfills = {} } = options;
 
-	polyfills.dns = polyfills.dns ?? "empty";
-	polyfills.dgram = polyfills.dgram ?? "empty";
-	polyfills.cluster = polyfills.cluster ?? "empty";
-	polyfills.repl = polyfills.repl ?? "empty";
-	polyfills.tls = polyfills.tls ?? "empty";
-
-	const moduleNames = [
-		...new Set([
-			...Object.keys(npmPolyfillMap),
-			...emptyShims.keys(),
-			...Object.keys(polyfills),
-			"inherits",
-		]),
-	];
+	const moduleNames = [...new Set([...denoPolyfills])];
 
 	const filter = new RegExp(`^(node:)?(${moduleNames.join("|")})$`);
 
@@ -232,7 +207,7 @@ export function polyfillNodeForDeno(
 				}),
 			);
 
-			build.onResolve({ filter }, async ({ path, importer }) => {
+			build.onResolve({ filter }, async ({ path }) => {
 				const [, , moduleName] = path.match(filter)!;
 
 				const polyfill =
@@ -244,15 +219,7 @@ export function polyfillNodeForDeno(
 					return {
 						path: resolve(dirname(filename), "../polyfills/empty.js"),
 					};
-				} else if (
-					moduleName === "inherits" &&
-					polyfills.util === "npm" &&
-					importer === (await resolveImport("util/util.js"))
-				) {
-					return {
-						path: resolve(dirname(filename), "../polyfills/inherits.js"),
-					};
-				} else if (polyfill === true) {
+				} else {
 					if (!denoPolyfills.has(moduleName)) {
 						throw new Error("Cannot find the Deno polyfill for " + moduleName);
 					}
@@ -262,15 +229,6 @@ export function polyfillNodeForDeno(
 						external: true,
 					};
 				}
-
-				// npm
-				if (!npmPolyfillMap[moduleName]) {
-					throw new Error("Cannot find NPM polyfill for " + moduleName);
-				}
-
-				return {
-					path: await resolveImport(npmPolyfillMap[moduleName]),
-				};
 			});
 
 			build.onLoad({ namespace: "polyfillNodeForDeno", filter: /.*/ }, () => ({
@@ -290,47 +248,55 @@ export function polyfillNodeForDeno(
 	};
 }
 
-const npmPolyfillMap: Record<string, string> = {
-	_buffer_list: "readable-stream/lib/internal/streams/buffer_list.js",
-	_stream_passthrough: "readable-stream/lib/_stream_passthrough.js",
-	_stream_readable: "readable-stream/lib/_stream_readable.js",
-	_stream_transform: "readable-stream/lib/_stream_transform.js",
-	_stream_writable: "readable-stream/lib/_stream_writable.js",
-	assert: "assert/build/assert.js",
-	buffer: "buffer-es6/index.js",
-	console: "console-browserify/index.js",
-	crypto: "crypto-browserify/index.js",
-	domain: "domain-browser/source/index.js",
-	events: "events/events.js",
-	fs: "browserify-fs/index.js",
-	http: "stream-http/index.js",
-	https: "stream-http/index.js",
-	os: "os-browserify/browser.js",
-	path: "path/path.js",
-	process: "process-es6/browser.js",
-	punycode: "punycode/punycode.es6.js",
-	querystring: "querystring/index.js",
-	stream: "stream/index.js",
-	string_decoder: "string_decoder/lib/string_decoder.js",
-	sys: "util/util.js",
-	timers: "timers-browserify/main.js",
-	tty: "tty-browserify/index.js",
-	url: "url/url.js",
-	util: "util/util.js",
-	vm: "vm-browserify/index.js",
-	zlib: "browserify-zlib/lib/index.js",
-};
-
-const emptyShims = new Set([
-	"dns",
-	"dgram",
+const jspmPolyiflls = new Set([
+	"_stream_duplex",
+	"_stream_passthrough",
+	"_stream_readable",
+	"_stream_transform",
+	"_stream_writable",
+	"assert",
+	"assert/strict",
+	"async_hooks",
+	"buffer",
 	"child_process",
 	"cluster",
+	"console",
+	"constants",
+	"crypto",
+	"dgram",
+	"diagnostics_channel",
+	"dns",
+	"domain",
+	"events",
+	"fs",
+	"fs/promises",
+	"http",
+	"http2",
+	"https",
 	"module",
 	"net",
+	"os",
+	"path",
+	"perf_hooks",
+	"process",
+	"punycode",
+	"querystring",
 	"readline",
 	"repl",
+	"stream",
+	"string_decoder",
+	"sys",
+	"timers",
+	"timers/promises",
 	"tls",
+	"tty",
+	"url",
+	"util",
+	"v8",
+	"vm",
+	"wasi",
+	"worker_threads",
+	"zlib",
 ]);
 
 const denoPolyfills = new Set([
