@@ -9,27 +9,66 @@ const filename =
 const importMetaUrl = import.meta.url ?? pathToFileURL(filename).href;
 
 export interface PolyfillNodeOptions {
-	globals?: {
-		/**
-		 * Whether to inject the `Buffer` global.
-		 *
-		 * Disable it to prevent code like `if (typeof Buffer !== "undefined")`
-		 * from pulling in the (quite large) Buffer polyfill.
-		 *
-		 * @default true
-		 */
-		buffer?: boolean;
-		/**
-		 * Whether to inject the `process` global.
-		 *
-		 * Disable it to prevent `process.env.NODE_ENV` from pulling in the
-		 * `process-es6` polyfill. You can use the `define` option to replace
-		 * `process.env.NODE_ENV` instead.
-		 *
-		 * @default true
-		 */
-		process?: boolean;
-	};
+	/**
+	 * Whether to inject globals.
+	 *
+	 * Set to `false` to disable all globals.
+	 */
+	globals?:
+		| false
+		| {
+				/**
+				 * Whether to inject the `global` global.
+				 *
+				 * It is set as an alias of `globalThis`.
+				 *
+				 * @default true
+				 */
+				global?: boolean;
+				/**
+				 * Whether to inject the `__dirname` global.
+				 *
+				 * Always defined as `/`.
+				 *
+				 * @default true
+				 */
+				__dirname?: boolean;
+				/**
+				 * Whether to inject the `__filename` global.
+				 *
+				 * Always defined as `/index.js`.
+				 *
+				 * @default true
+				 */
+				__filename?: boolean;
+				/**
+				 * Whether to inject the `Buffer` global.
+				 *
+				 * Disable it to prevent code like `if (typeof Buffer !== "undefined")`
+				 * from pulling in the (quite large) Buffer polyfill.
+				 *
+				 * @default true
+				 */
+				buffer?: boolean;
+				/**
+				 * Whether to inject the `process` global.
+				 *
+				 * Disable it to prevent `process.env.NODE_ENV` from pulling in the
+				 * `process-es6` polyfill. You can use the `define` option to replace
+				 * `process.env.NODE_ENV` instead.
+				 *
+				 * @default true
+				 */
+				process?: boolean;
+				/**
+				 * Whether to inject the `navigator` global.
+				 *
+				 * It is used by some of the polyfills.
+				 *
+				 * @default false
+				 */
+				navigator?: boolean;
+		  };
 	polyfills?: {
 		_stream_duplex?: boolean | "empty";
 		_stream_passthrough?: boolean | "empty";
@@ -83,8 +122,23 @@ export interface PolyfillNodeOptions {
 }
 
 export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
-	const { globals: { buffer = true, process = true } = {}, polyfills = {} } =
-		options;
+	const { globals = {}, polyfills = {} } = options;
+
+	const {
+		global = true,
+		__dirname = true,
+		__filename = true,
+		buffer = true,
+		process = true,
+		navigator = false,
+	} = globals || {
+		global: false,
+		__dirname: false,
+		__filename: false,
+		buffer: false,
+		process: false,
+		navigator: false,
+	};
 
 	polyfills.fs = polyfills.fs ?? "empty";
 	polyfills.crypto = polyfills.crypto ?? "empty";
@@ -122,23 +176,40 @@ export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
 				return { path: resolved };
 			});
 
-			build.initialOptions.inject = build.initialOptions.inject || [];
-			build.initialOptions.inject.push(
-				resolve(dirname(filename), "../polyfills/global.js"),
-				resolve(dirname(filename), "../polyfills/__dirname.js"),
-				resolve(dirname(filename), "../polyfills/__filename.js"),
-			);
+			if (globals) {
+				build.initialOptions.inject = build.initialOptions.inject || [];
 
-			if (buffer) {
-				build.initialOptions.inject.push(
-					resolve(dirname(filename), "../polyfills/buffer.js"),
-				);
-			}
+				if (global) {
+					resolve(dirname(filename), "../polyfills/global.js");
+				}
 
-			if (process) {
-				build.initialOptions.inject.push(
-					resolve(dirname(filename), "../polyfills/process.js"),
-				);
+				if (__dirname) {
+					build.initialOptions.inject.push(
+						resolve(dirname(filename), "../polyfills/__dirname.js"),
+					);
+				}
+
+				if (__filename) {
+					resolve(dirname(filename), "../polyfills/__filename.js");
+				}
+
+				if (buffer) {
+					build.initialOptions.inject.push(
+						resolve(dirname(filename), "../polyfills/buffer.js"),
+					);
+				}
+
+				if (process) {
+					build.initialOptions.inject.push(
+						resolve(dirname(filename), "../polyfills/process.js"),
+					);
+				}
+
+				if (navigator) {
+					build.initialOptions.inject.push(
+						resolve(dirname(filename), "../polyfills/navigator.js"),
+					);
+				}
 			}
 		},
 	};
