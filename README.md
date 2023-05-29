@@ -92,12 +92,13 @@ Polyfills are provided by the [`@jspm/core`](https://github.com/jspm/jspm-core/)
 ### Globals
 
 - `global` (aliased to `globalThis`)
-- `process`¹ (imports the `process` module)
-- `Buffer`¹ (imports the `buffer` module)
 - `__dirname` (always `"/"`)
 - `__filename` (always `"/index.js"`)
+- `process` (imports the `process` module)
+- `Buffer` (imports the `buffer` module)
+- `navigator` (shim, not included by default)
 
-¹ `process` and `Buffer` shims can be disabled by passing `globals.process: false` and `globals.buffer: false` to the plugin options.
+You can control which globals are injected using the `globals` option.
 
 ## `polyfillNodeForDeno`
 
