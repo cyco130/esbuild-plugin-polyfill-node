@@ -302,14 +302,9 @@ export function polyfillNodeForDeno(
 						throw new Error("Cannot find the Deno polyfill for " + moduleName);
 					}
 
-					console.log('Polyfilling', moduleName)
-
 					return {
-						// path: `https://deno.land/std@${stdVersion}/node/${moduleName}.ts`,
-						// path: `node:${moduleName}`,
 						path: path,
 						namespace: "polyfillNodePackage",
-						// external: true,
 					};
 				}
 			});
