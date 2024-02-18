@@ -388,11 +388,12 @@ const jspmPolyiflls = new Set([
 const denoPolyfills = new Set([
 	"assert",
 	"assert/strict",
+	"async_hooks",
 	"buffer",
+	"child_process",
 	"console",
 	"constants",
 	"crypto",
-	"child_process",
 	"dns",
 	"events",
 	"fs",
@@ -415,11 +416,6 @@ const denoPolyfills = new Set([
 	"url",
 	"util",
 	"worker_threads",
-	
-
-	// ===
-
-	"async_hooks",
 ]);
 
 let importMetaResolve: typeof import("import-meta-resolve").resolve;
