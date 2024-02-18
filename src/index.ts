@@ -216,7 +216,6 @@ export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
 }
 
 export interface PolyfillNodeForDenoOptions {
-	stdVersion?: string;
 	globals?: boolean;
 	polyfills?: {
 		assert?: boolean | "empty";
@@ -258,7 +257,7 @@ export interface PolyfillNodeForDenoOptions {
 export function polyfillNodeForDeno(
 	options: PolyfillNodeForDenoOptions = {},
 ): Plugin {
-	const { stdVersion = "0.177.0", globals = true, polyfills = {} } = options;
+	const { globals = true, polyfills = {} } = options;
 
 	const moduleNames = [...new Set([...denoPolyfills])];
 
@@ -268,16 +267,6 @@ export function polyfillNodeForDeno(
 		name: "node-polyfills",
 
 		setup(build) {
-			build.onResolve(
-				{
-					filter: /^virtual:deno-std-node-global$/,
-				},
-				() => ({
-					path: `https://deno.land/std@${stdVersion}/node/global.ts`,
-					external: true,
-				}),
-			);
-
 			build.onResolve({ filter: /^virtual:node:.*/ }, async ({ path }) => {
 				return {
 					path: path.replace(/^virtual:node:/, "node:"),
