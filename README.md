@@ -1,5 +1,7 @@
 # esbuild-plugin-polyfill-node
 
+**LOOKING FOR MAINTAINERS:** Due to time constraints, I am not able to maintain this package anymore. You can contact me via email, Twitter, or Discord. All on my profile.
+
 [ESBuild](https://esbuild.github.io/) plugin to polyfill Node.js built-ins and globals, geared towards edge environments and Deno (including Deno Deploy). It consists of two plugins: `polyfillNode`, which should work for most cases, and `polyfillNodeForDeno` which targets Deno and Deno Deploy specifically.
 
 ## Installation
