@@ -180,7 +180,9 @@ export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
 				build.initialOptions.inject = build.initialOptions.inject || [];
 
 				if (global) {
-					resolve(dirname(filename), "../polyfills/global.js");
+					build.initialOptions.inject.push(
+						resolve(dirname(filename), "../polyfills/global.js"),
+					);
 				}
 
 				if (__dirname) {
@@ -190,7 +192,9 @@ export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
 				}
 
 				if (__filename) {
-					resolve(dirname(filename), "../polyfills/__filename.js");
+					build.initialOptions.inject.push(
+						resolve(dirname(filename), "../polyfills/__filename.js"),
+					);
 				}
 
 				if (buffer) {
