@@ -216,7 +216,6 @@ export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
 }
 
 export interface PolyfillNodeForDenoOptions {
-	stdVersion?: string;
 	globals?: boolean;
 	polyfills?: {
 		assert?: boolean | "empty";
@@ -258,7 +257,7 @@ export interface PolyfillNodeForDenoOptions {
 export function polyfillNodeForDeno(
 	options: PolyfillNodeForDenoOptions = {},
 ): Plugin {
-	const { stdVersion = "0.177.0", globals = true, polyfills = {} } = options;
+	const { globals = true, polyfills = {} } = options;
 
 	const moduleNames = [...new Set([...denoPolyfills])];
 
@@ -268,15 +267,12 @@ export function polyfillNodeForDeno(
 		name: "node-polyfills",
 
 		setup(build) {
-			build.onResolve(
-				{
-					filter: /^virtual:deno-std-node-global$/,
-				},
-				() => ({
-					path: `https://deno.land/std@${stdVersion}/node/global.ts`,
+			build.onResolve({ filter: /^virtual:node:.*/ }, async ({ path }) => {
+				return {
+					path: path.replace(/^virtual:node:/, "node:"),
 					external: true,
-				}),
-			);
+				};
+			});
 
 			build.onResolve({ filter }, async ({ path }) => {
 				const [, , moduleName] = path.match(filter)!;
@@ -296,15 +292,18 @@ export function polyfillNodeForDeno(
 					}
 
 					return {
-						path: `https://deno.land/std@${stdVersion}/node/${moduleName}.ts`,
-						external: true,
+						path: path,
+						namespace: "polyfillNodePackage",
 					};
 				}
 			});
 
-			build.onLoad({ namespace: "polyfillNodeForDeno", filter: /.*/ }, () => ({
-				contents: denoGlobalsContents(stdVersion),
-			}));
+			build.onLoad({ namespace: "polyfillNodePackage", filter: /.*/ }, args => {
+				console.log('Loading polyfill', args.path)
+				return {
+					contents: denoNodePackage(args.path),
+				}
+			});
 
 			if (globals) {
 				build.initialOptions.footer;
@@ -373,11 +372,12 @@ const jspmPolyiflls = new Set([
 const denoPolyfills = new Set([
 	"assert",
 	"assert/strict",
+	"async_hooks",
 	"buffer",
+	"child_process",
 	"console",
 	"constants",
 	"crypto",
-	"child_process",
 	"dns",
 	"events",
 	"fs",
@@ -412,12 +412,9 @@ async function resolveImport(specifier: string) {
 	return fileURLToPath(resolved);
 }
 
-function denoGlobalsContents(stdVersion: string) {
+function denoNodePackage(moduleName: string) {
 	return `
-		import "https://deno.land/std@${stdVersion}/node/global.ts";
-		export const process = globalThis.process;
-		export const Buffer = globalThis.Buffer;
-		export const setImmediate = globalThis.setImmediate;
-		export const clearImmediate = globalThis.clearImmediate;
+		export * from "virtual:node:${moduleName}";
+		export { default } from "virtual:node:${moduleName}";
 	`;
 }
