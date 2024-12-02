@@ -29,7 +29,7 @@
 		"esbuild": "*"
 	},
 	"devDependencies": {
-		"@cyco130/eslint-config": "^3.3.2",
+		"@cyco130/eslint-config": "^5.0.1",
 		"@types/node": "20.5.6",
 		"esbuild": "^0.19.2",
 		"eslint": "^8.48.0",
