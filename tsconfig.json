@@ -1,14 +1,15 @@
 {
 	"compilerOptions": {
 		"strict": true,
-		"module": "ES2020",
+		"module": "NodeNext",
 		"lib": ["ES2020", "ES2021.String"],
 		"esModuleInterop": true,
-		"target": "es6",
-		"moduleResolution": "node",
+		"target": "ES2020",
+		"moduleResolution": "NodeNext",
 		"types": ["node"],
 		"skipLibCheck": true,
-		"resolveJsonModule": true
+		"resolveJsonModule": true,
+		"declaration": true
 	},
 	"include": ["src/**/*.ts"]
 }
