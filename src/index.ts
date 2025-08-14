@@ -68,6 +68,7 @@ export interface PolyfillNodeOptions {
 				 * @default false
 				 */
 				navigator?: boolean;
+		    denoBuildOs?: string | false; // default: "linux"
 		  };
 	polyfills?: {
 		_stream_duplex?: boolean | "empty";
@@ -131,6 +132,7 @@ export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
 		buffer = true,
 		process = true,
 		navigator = false,
+		denoBuildOs = "linux",
 	} = globals || {
 		global: false,
 		__dirname: false,
@@ -138,6 +140,7 @@ export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
 		buffer: false,
 		process: false,
 		navigator: false,
+		denoBuildOs: "linux",
 	};
 
 	polyfills.fs = polyfills.fs ?? "empty";
@@ -155,6 +158,23 @@ export function polyfillNode(options: PolyfillNodeOptions = {}): Plugin {
 		name: "node-polyfills",
 
 		async setup(build) {
+			if (denoBuildOs !== false) {
+				const desired = typeof denoBuildOs === "string" ? denoBuildOs : "x64";
+				const snippet =
+					`;(()=>{try{` +
+					`const g=globalThis;const D=(g.Deno=g.Deno||{});` +
+					`const B=(D.build=D.build||{});` +
+					`if(B.os==null){B.os=${JSON.stringify(desired)};}` +
+					`}catch{}})();`;
+
+				const prev = build.initialOptions.banner?.js ?? "";
+				build.initialOptions.banner = {
+					...(build.initialOptions.banner ?? {}),
+					// Prepend to ensure we’re literally first.
+					js: snippet + (prev ? "\n" + prev : ""),
+				};
+			}
+
 			const fsResolved = await resolveImport(`@jspm/core/nodelibs/fs`);
 
 			build.onResolve({ filter }, async ({ path }) => {
